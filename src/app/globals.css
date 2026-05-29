@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #fafafa;
+  --foreground: #18181b;
 }
 
 @theme inline {
@@ -12,15 +12,111 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Admin preview / CMS HTML (sanitized TipTap) — before editor rules for lint specificity order */
+.cms-html-preview h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 1.25rem 0 0.5rem;
+  color: #18181b;
+}
+
+.cms-html-preview h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 1rem 0 0.4rem;
+  color: #27272a;
+}
+
+.cms-html-preview p {
+  margin: 0.65rem 0;
+}
+
+.cms-html-preview ul,
+.cms-html-preview ol {
+  margin: 0.65rem 0;
+  padding-left: 1.35rem;
+}
+
+.cms-html-preview blockquote {
+  margin: 1rem 0;
+  padding-left: 0.85rem;
+  border-left: 3px solid rgb(245 158 11 / 0.55);
+  color: #52525b;
+}
+
+.cms-html-preview a {
+  color: #b45309;
+  text-decoration: underline;
+}
+
+.cms-html-preview img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.375rem;
+  margin: 0.75rem 0;
+}
+
+.cms-html-preview hr {
+  margin: 1.25rem 0;
+  border-color: rgb(228 228 231);
+}
+
+/* TipTap (admin rich text) */
+.rich-text-editor .tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  color: #a1a1aa;
+}
+
+.rich-text-editor .tiptap:focus {
+  outline: none;
+}
+
+.rich-text-editor .tiptap h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0.75rem 0 0.35rem;
+}
+
+.rich-text-editor .tiptap h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0.65rem 0 0.3rem;
+}
+
+.rich-text-editor .tiptap p {
+  margin: 0.35rem 0;
+}
+
+.rich-text-editor .tiptap ul,
+.rich-text-editor .tiptap ol {
+  margin: 0.35rem 0;
+  padding-left: 1.25rem;
+}
+
+.rich-text-editor .tiptap blockquote {
+  margin: 0.5rem 0;
+  padding-left: 0.75rem;
+  border-left: 3px solid rgb(245 158 11 / 0.55);
+  color: #52525b;
+}
+
+.rich-text-editor .tiptap a {
+  color: #b45309;
+  text-decoration: underline;
+}
+
+.rich-text-editor .tiptap img.rich-text-editor__img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.375rem;
+  margin: 0.5rem 0;
 }
