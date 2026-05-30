@@ -1,5 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { PublicSiteHeader } from "@/components/public-site-header";
+import { FacultyProgramRequirementsBody } from "@/components/faculty-program-requirements-body";
 import { SanitizedHtmlBody } from "@/components/sanitized-html-body";
 import { Link } from "@/i18n/navigation";
 import { fetchAdmissionsContent } from "@/lib/admissions-server";
@@ -78,10 +79,10 @@ export default async function AdmissionsPage() {
                   )}
                 </div>
                 { (p.admissionRequirements ?? []).length > 0 ? (
-                  <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-zinc-700">
-                    {(p.admissionRequirements ?? []).slice(0, 3).map((req) => (
-                      <li key={req}>{req}</li>
-                    ))}
+                  <div className="mt-4 text-sm text-zinc-700">
+                    <FacultyProgramRequirementsBody
+                      items={(p.admissionRequirements ?? []).slice(0, 3)}
+                    />
                     {(p.admissionRequirements ?? []).length > 3 ? (
                       <li>
                         <Link
@@ -92,7 +93,7 @@ export default async function AdmissionsPage() {
                         </Link>
                       </li>
                     ) : null}
-                  </ul>
+                  </div>
                 ) : null}
               </li>
             ))}

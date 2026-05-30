@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { FacultyProgramHero } from "@/components/faculty-program-hero";
+import { FacultyProgramRequirementsBody } from "@/components/faculty-program-requirements-body";
 import { ProgramMetaBadges } from "@/components/program-meta-badges";
 import { PublicSiteHeader } from "@/components/public-site-header";
 import { SanitizedHtmlBody } from "@/components/sanitized-html-body";
@@ -67,11 +68,10 @@ export default async function ProgramDetailPage({ params }: Props) {
                 <h2 className="text-lg font-semibold text-zinc-900">
                   {t("admissionRequirements")}
                 </h2>
-                <ul className="mt-3 list-disc space-y-2 pl-5 text-zinc-700">
-                  {(program.admissionRequirements ?? []).map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
+                <FacultyProgramRequirementsBody
+                  items={program.admissionRequirements ?? []}
+                  className="prose prose-zinc mt-3 max-w-none text-zinc-700 [&_a]:text-amber-800"
+                />
               </section>
             ) : null}
             {(program.clinicalRequirements ?? []).length > 0 ? (
@@ -79,11 +79,10 @@ export default async function ProgramDetailPage({ params }: Props) {
                 <h2 className="text-lg font-semibold text-zinc-900">
                   {t("clinicalRequirements")}
                 </h2>
-                <ul className="mt-3 list-disc space-y-2 pl-5 text-zinc-700">
-                  {(program.clinicalRequirements ?? []).map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
+                <FacultyProgramRequirementsBody
+                  items={program.clinicalRequirements ?? []}
+                  className="prose prose-zinc mt-3 max-w-none text-zinc-700 [&_a]:text-amber-800"
+                />
               </section>
             ) : null}
           </div>

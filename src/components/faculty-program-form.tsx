@@ -8,6 +8,10 @@ import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "@/i18n/navigation";
 import { apiFetch } from "@/lib/api/client";
 import { FACULTY_PROGRAM_ICON_KEYS } from "@/lib/faculty-program-icon-keys";
+import {
+  editorHtmlToRequirementsArray,
+  requirementsArrayToEditorHtml,
+} from "@/lib/faculty-program-requirements";
 import type { FacultyProgramRow } from "@/lib/types";
 
 function richBodyToPayload(html: string): string | null {
@@ -19,17 +23,6 @@ function richBodyToPayload(html: string): string | null {
     return null;
   }
   return html.trimEnd();
-}
-
-function linesToArray(text: string): string[] {
-  return text
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean);
-}
-
-function arrayToLines(items: string[] | undefined): string {
-  return (items ?? []).join("\n");
 }
 
 type Props = {
@@ -63,11 +56,11 @@ export function FacultyProgramForm({ mode, initial }: Props) {
   const [practicumHours, setPracticumHours] = useState(
     initial?.practicumHours != null ? String(initial.practicumHours) : "",
   );
-  const [admissionRequirements, setAdmissionRequirements] = useState(
-    arrayToLines(initial?.admissionRequirements),
+  const [admissionRequirements, setAdmissionRequirements] = useState(() =>
+    requirementsArrayToEditorHtml(initial?.admissionRequirements),
   );
-  const [clinicalRequirements, setClinicalRequirements] = useState(
-    arrayToLines(initial?.clinicalRequirements),
+  const [clinicalRequirements, setClinicalRequirements] = useState(() =>
+    requirementsArrayToEditorHtml(initial?.clinicalRequirements),
   );
   const [acceptingApplications, setAcceptingApplications] = useState(
     initial?.acceptingApplications ?? true,
@@ -102,8 +95,8 @@ export function FacultyProgramForm({ mode, initial }: Props) {
       format: format.trim() || null,
       practicumHours:
         practicum != null && Number.isFinite(practicum) ? practicum : null,
-      admissionRequirements: linesToArray(admissionRequirements),
-      clinicalRequirements: linesToArray(clinicalRequirements),
+      admissionRequirements: editorHtmlToRequirementsArray(admissionRequirements),
+      clinicalRequirements: editorHtmlToRequirementsArray(clinicalRequirements),
       acceptingApplications,
       sortOrder: order,
       isPublished,
@@ -271,28 +264,30 @@ export function FacultyProgramForm({ mode, initial }: Props) {
         </div>
       </div>
       <div>
-        <label htmlFor={`${formId}-admission-req`} className={labelClass}>
+        <span id={`${formId}-admission-req-label`} className={labelClass}>
           {t("admissionRequirements")}
-        </label>
-        <textarea
-          id={`${formId}-admission-req`}
-          rows={4}
+        </span>
+        <p className="mb-2 text-sm text-slate-600">{t("requirementsRichHint")}</p>
+        <FacultyProgramFormBodyEditor
+          instanceKey={`admission-${mode}-${initial?.id ?? "new"}`}
+          labelId={`${formId}-admission-req-label`}
+          editorId={`${formId}-admission-req`}
           value={admissionRequirements}
-          onChange={(e) => setAdmissionRequirements(e.target.value)}
-          className={inputClass}
+          onChange={setAdmissionRequirements}
           placeholder={t("requirementsPlaceholder")}
         />
       </div>
       <div>
-        <label htmlFor={`${formId}-clinical-req`} className={labelClass}>
+        <span id={`${formId}-clinical-req-label`} className={labelClass}>
           {t("clinicalRequirements")}
-        </label>
-        <textarea
-          id={`${formId}-clinical-req`}
-          rows={4}
+        </span>
+        <p className="mb-2 text-sm text-slate-600">{t("requirementsRichHint")}</p>
+        <FacultyProgramFormBodyEditor
+          instanceKey={`clinical-${mode}-${initial?.id ?? "new"}`}
+          labelId={`${formId}-clinical-req-label`}
+          editorId={`${formId}-clinical-req`}
           value={clinicalRequirements}
-          onChange={(e) => setClinicalRequirements(e.target.value)}
-          className={inputClass}
+          onChange={setClinicalRequirements}
           placeholder={t("requirementsPlaceholder")}
         />
       </div>
