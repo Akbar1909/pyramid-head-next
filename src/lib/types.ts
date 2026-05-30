@@ -100,19 +100,34 @@ export type FacultyProgramIconKey =
   | "cardiology"
   | "psw"
   | "medical_admin"
+  | "clinical_assistant"
   | "science"
   | "generic";
 
 export type FacultyProgramRow = {
   id: string;
+  slug: string;
   title: string;
   description: string;
   body: string | null;
   iconKey: FacultyProgramIconKey | string;
+  imageFile: ThumbnailRef;
+  duration: string | null;
+  credentialType: string | null;
+  format: string | null;
+  practicumHours: number | null;
+  admissionRequirements: string[];
+  clinicalRequirements: string[];
+  acceptingApplications: boolean;
   sortOrder: number;
   isPublished: boolean;
   createdAt: string;
   updatedAt: string;
+};
+
+export type AdmissionsContent = {
+  introHtml: string | null;
+  generalRequirements: string[];
 };
 
 export type TourBookingStatus = "PENDING" | "CONFIRMED" | "CANCELLED";
@@ -133,23 +148,40 @@ export type TourBookingRow = {
 export type ProgramApplicationStatus =
   | "SUBMITTED"
   | "UNDER_REVIEW"
+  | "INTERVIEW_SCHEDULED"
+  | "OFFER_SENT"
   | "ACCEPTED"
+  | "ENROLLED"
   | "DECLINED"
   | "WITHDRAWN";
+
+export type ProgramApplicationDocumentType =
+  | "transcript"
+  | "government_id"
+  | "credentials"
+  | "police_check"
+  | "immunization"
+  | "cpr_certification"
+  | "other";
 
 export type ProgramApplicationListRow = {
   id: string;
   firstName: string;
   lastName: string;
   email: string;
+  phone: string;
   dateOfBirth: string;
   citizenship: string;
+  preferredStartDate: string;
   facultyProgramId: string | null;
   status: ProgramApplicationStatus;
   adminNotes: string | null;
+  interviewScheduledAt: string | null;
+  interviewNotes: string | null;
+  enrolledAt: string | null;
   createdAt: string;
   updatedAt: string;
-  facultyProgram: { id: string; title: string } | null;
+  facultyProgram: { id: string; title: string; slug?: string } | null;
   _count: { attachments: number };
 };
 
@@ -157,6 +189,7 @@ export type ProgramApplicationAttachmentRow = {
   id: string;
   applicationId: string;
   storedFileId: string;
+  documentType: ProgramApplicationDocumentType | string;
   storedFile: {
     id: string;
     originalName: string | null;
@@ -171,20 +204,43 @@ export type ProgramApplicationDetail = {
   firstName: string;
   lastName: string;
   email: string;
+  phone: string;
   dateOfBirth: string;
   citizenship: string;
+  preferredStartDate: string;
   facultyProgramId: string | null;
   status: ProgramApplicationStatus;
   adminNotes: string | null;
+  interviewScheduledAt: string | null;
+  interviewNotes: string | null;
+  enrolledAt: string | null;
   createdAt: string;
   updatedAt: string;
   facultyProgram: {
     id: string;
     title: string;
+    slug?: string;
     description: string;
     iconKey: string;
   } | null;
   attachments: ProgramApplicationAttachmentRow[];
+};
+
+export type ProgramApplicationSubmitResponse = {
+  id: string;
+  trackingToken: string;
+  createdAt: string;
+};
+
+export type ProgramApplicationTrackResponse = {
+  id: string;
+  status: ProgramApplicationStatus;
+  preferredStartDate: string;
+  interviewScheduledAt: string | null;
+  enrolledAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  facultyProgram: { id: string; title: string; slug: string } | null;
 };
 
 export type ProfileBundle = {

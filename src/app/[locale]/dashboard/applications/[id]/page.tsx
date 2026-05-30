@@ -7,31 +7,38 @@ import { useAuth } from "@/contexts/auth-context";
 import { Link, useRouter } from "@/i18n/navigation";
 import { apiFetch } from "@/lib/api/client";
 import { getApiBaseUrl } from "@/lib/env";
-import { formatDateTime, programApplicationStatusClass } from "@/lib/format";
+import {
+  formatDateOnly,
+  formatDateTime,
+  fromDatetimeLocalValue,
+  programApplicationStatusClass,
+  toDatetimeLocalValue,
+} from "@/lib/format";
+import {
+  ALL_PROGRAM_APPLICATION_STATUSES,
+  useProgramApplicationStatusLabel,
+} from "@/lib/program-application-status";
 import type {
   ProgramApplicationDetail,
   ProgramApplicationStatus,
 } from "@/lib/types";
 
-const STATUSES: ProgramApplicationStatus[] = [
-  "SUBMITTED",
-  "UNDER_REVIEW",
-  "ACCEPTED",
-  "DECLINED",
-  "WITHDRAWN",
-];
-
 export default function ApplicationDetailPage() {
   const t = useTranslations("DashboardApplications");
+  const tDoc = useTranslations("DocumentTypes");
   const tCommon = useTranslations("Common");
   const params = useParams();
   const id = typeof params.id === "string" ? params.id : "";
   const router = useRouter();
   const { token } = useAuth();
+  const statusLabel = useProgramApplicationStatusLabel();
   const [row, setRow] = useState<ProgramApplicationDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<ProgramApplicationStatus>("SUBMITTED");
   const [notes, setNotes] = useState("");
+  const [interviewScheduledAt, setInterviewScheduledAt] = useState("");
+  const [interviewNotes, setInterviewNotes] = useState("");
+  const [enrolledAt, setEnrolledAt] = useState("");
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
@@ -48,6 +55,9 @@ export default function ApplicationDetailPage() {
       setRow(data);
       setStatus(data.status);
       setNotes(data.adminNotes ?? "");
+      setInterviewScheduledAt(toDatetimeLocalValue(data.interviewScheduledAt));
+      setInterviewNotes(data.interviewNotes ?? "");
+      setEnrolledAt(toDatetimeLocalValue(data.enrolledAt));
     } catch (e) {
       setError(e instanceof Error ? e.message : tCommon("failedToLoad"));
     }
@@ -56,23 +66,6 @@ export default function ApplicationDetailPage() {
   useEffect(() => {
     void load();
   }, [load]);
-
-  function statusLabel(s: ProgramApplicationStatus): string {
-    switch (s) {
-      case "SUBMITTED":
-        return t("statusSubmitted");
-      case "UNDER_REVIEW":
-        return t("statusUnderReview");
-      case "ACCEPTED":
-        return t("statusAccepted");
-      case "DECLINED":
-        return t("statusDeclined");
-      case "WITHDRAWN":
-        return t("statusWithdrawn");
-      default:
-        return s;
-    }
-  }
 
   async function onSave(e: React.FormEvent) {
     e.preventDefault();
@@ -90,10 +83,18 @@ export default function ApplicationDetailPage() {
           body: JSON.stringify({
             status,
             adminNotes: notes.trim() || null,
+            interviewScheduledAt:
+              fromDatetimeLocalValue(interviewScheduledAt) ?? null,
+            interviewNotes: interviewNotes.trim() || null,
+            enrolledAt: fromDatetimeLocalValue(enrolledAt) ?? null,
           }),
         },
       );
       setRow(updated);
+      setInterviewScheduledAt(
+        toDatetimeLocalValue(updated.interviewScheduledAt),
+      );
+      setEnrolledAt(toDatetimeLocalValue(updated.enrolledAt));
     } catch (e) {
       setError(e instanceof Error ? e.message : t("saveError"));
     } finally {
@@ -174,6 +175,7 @@ export default function ApplicationDetailPage() {
           {row.firstName} {row.lastName}
         </p>
         <p className="text-slate-600">{row.email}</p>
+        <p className="text-slate-600">{row.phone}</p>
         <p className="mt-2">
           <span
             className={`inline-flex rounded-md px-2.5 py-1 text-xs font-semibold ${programApplicationStatusClass(row.status)}`}
@@ -189,7 +191,7 @@ export default function ApplicationDetailPage() {
             {t("dob")}
           </dt>
           <dd className="mt-1 text-slate-800">
-            {formatDateTime(row.dateOfBirth)}
+            {formatDateOnly(row.dateOfBirth)}
           </dd>
         </div>
         <div>
@@ -197,6 +199,14 @@ export default function ApplicationDetailPage() {
             {t("citizenship")}
           </dt>
           <dd className="mt-1 text-slate-800">{row.citizenship}</dd>
+        </div>
+        <div>
+          <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            {t("preferredStartDate")}
+          </dt>
+          <dd className="mt-1 text-slate-800">
+            {formatDateOnly(row.preferredStartDate)}
+          </dd>
         </div>
         <div className="sm:col-span-2">
           <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -216,8 +226,21 @@ export default function ApplicationDetailPage() {
           {row.attachments.map((a) => {
             const href = `${base}/files/uploads/${encodeURIComponent(a.storedFileId)}/download`;
             const label = a.storedFile.originalName ?? a.storedFileId;
+            const docType = tDoc(
+              (a.documentType || "other") as
+                | "transcript"
+                | "government_id"
+                | "credentials"
+                | "police_check"
+                | "immunization"
+                | "cpr_certification"
+                | "other",
+            );
             return (
               <li key={a.id}>
+                <span className="mr-2 rounded bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+                  {docType}
+                </span>
                 <a
                   href={href}
                   target="_blank"
@@ -258,12 +281,58 @@ export default function ApplicationDetailPage() {
             }
             className="mt-2 min-h-10 max-w-xs rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-800 shadow-sm"
           >
-            {STATUSES.map((s) => (
+            {ALL_PROGRAM_APPLICATION_STATUSES.map((s) => (
               <option key={s} value={s}>
                 {statusLabel(s)}
               </option>
             ))}
           </select>
+        </div>
+        <div>
+          <label
+            className="block text-xs font-semibold uppercase tracking-wide text-slate-500"
+            htmlFor="app-interview-at"
+          >
+            {t("interviewScheduledAt")}
+          </label>
+          <input
+            id="app-interview-at"
+            type="datetime-local"
+            value={interviewScheduledAt}
+            onChange={(e) => setInterviewScheduledAt(e.target.value)}
+            className="mt-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm"
+          />
+        </div>
+        <div>
+          <label
+            className="block text-xs font-semibold uppercase tracking-wide text-slate-500"
+            htmlFor="app-interview-notes"
+          >
+            {t("interviewNotes")}
+          </label>
+          <textarea
+            id="app-interview-notes"
+            value={interviewNotes}
+            onChange={(e) => setInterviewNotes(e.target.value)}
+            rows={3}
+            className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm"
+          />
+        </div>
+        <div>
+          <label
+            className="block text-xs font-semibold uppercase tracking-wide text-slate-500"
+            htmlFor="app-enrolled-at"
+          >
+            {t("enrolledAt")}
+          </label>
+          <input
+            id="app-enrolled-at"
+            type="datetime-local"
+            value={enrolledAt}
+            onChange={(e) => setEnrolledAt(e.target.value)}
+            className="mt-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm"
+          />
+          <p className="mt-1 text-xs text-slate-500">{t("enrolledAtHint")}</p>
         </div>
         <div>
           <label

@@ -6,15 +6,14 @@ import { useAuth } from "@/contexts/auth-context";
 import { Link } from "@/i18n/navigation";
 import { apiFetch } from "@/lib/api/client";
 import { formatDateTime, programApplicationStatusClass } from "@/lib/format";
-import type {
-  ProgramApplicationListRow,
-  ProgramApplicationStatus,
-} from "@/lib/types";
+import { useProgramApplicationStatusLabel } from "@/lib/program-application-status";
+import type { ProgramApplicationListRow } from "@/lib/types";
 
 export default function ApplicationsPage() {
   const t = useTranslations("DashboardApplications");
   const tCommon = useTranslations("Common");
   const { token } = useAuth();
+  const statusLabel = useProgramApplicationStatusLabel();
   const [rows, setRows] = useState<ProgramApplicationListRow[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -37,23 +36,6 @@ export default function ApplicationsPage() {
   useEffect(() => {
     void load();
   }, [load]);
-
-  function statusLabel(s: ProgramApplicationStatus): string {
-    switch (s) {
-      case "SUBMITTED":
-        return t("statusSubmitted");
-      case "UNDER_REVIEW":
-        return t("statusUnderReview");
-      case "ACCEPTED":
-        return t("statusAccepted");
-      case "DECLINED":
-        return t("statusDeclined");
-      case "WITHDRAWN":
-        return t("statusWithdrawn");
-      default:
-        return s;
-    }
-  }
 
   return (
     <div className="mx-auto max-w-[1100px] space-y-8">

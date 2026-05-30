@@ -48,15 +48,29 @@ export function tourBookingStatusClass(
 }
 
 export function programApplicationStatusClass(
-  status: "SUBMITTED" | "UNDER_REVIEW" | "ACCEPTED" | "DECLINED" | "WITHDRAWN",
+  status:
+    | "SUBMITTED"
+    | "UNDER_REVIEW"
+    | "INTERVIEW_SCHEDULED"
+    | "OFFER_SENT"
+    | "ACCEPTED"
+    | "ENROLLED"
+    | "DECLINED"
+    | "WITHDRAWN",
 ): string {
   switch (status) {
     case "SUBMITTED":
       return "bg-sky-100 text-sky-950";
     case "UNDER_REVIEW":
       return "bg-amber-100 text-amber-950";
+    case "INTERVIEW_SCHEDULED":
+      return "bg-violet-100 text-violet-950";
+    case "OFFER_SENT":
+      return "bg-indigo-100 text-indigo-950";
     case "ACCEPTED":
       return "bg-emerald-100 text-emerald-950";
+    case "ENROLLED":
+      return "bg-teal-100 text-teal-950";
     case "DECLINED":
       return "bg-red-100 text-red-950";
     case "WITHDRAWN":
@@ -64,6 +78,18 @@ export function programApplicationStatusClass(
     default:
       return "bg-slate-200 text-slate-800";
   }
+}
+
+/** ISO date (YYYY-MM-DD) for display. */
+export function formatDateOnly(iso: string | null | undefined): string {
+  if (!iso) {
+    return "—";
+  }
+  const d = new Date(iso.includes("T") ? iso : `${iso}T12:00:00`);
+  if (Number.isNaN(d.getTime())) {
+    return iso;
+  }
+  return d.toLocaleDateString(undefined, { dateStyle: "medium" });
 }
 
 export function publishBadgeClass(state: PublishState): string {

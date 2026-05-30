@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { useId, useState } from "react";
 import { FacultyProgramFormBodyEditor } from "@/components/faculty-program-form-body-editor";
+import { ThumbnailPicker } from "@/components/thumbnail-picker";
 import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "@/i18n/navigation";
 import { apiFetch } from "@/lib/api/client";
@@ -20,6 +21,17 @@ function richBodyToPayload(html: string): string | null {
   return html.trimEnd();
 }
 
+function linesToArray(text: string): string[] {
+  return text
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
+
+function arrayToLines(items: string[] | undefined): string {
+  return (items ?? []).join("\n");
+}
+
 type Props = {
   mode: "create" | "edit";
   initial?: FacultyProgramRow | null;
@@ -32,6 +44,7 @@ export function FacultyProgramForm({ mode, initial }: Props) {
   const router = useRouter();
   const { token } = useAuth();
   const [title, setTitle] = useState(initial?.title ?? "");
+  const [slug, setSlug] = useState(initial?.slug ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
   const [body, setBody] = useState(initial?.body ?? "");
   const [iconKey, setIconKey] = useState(() => {
@@ -41,6 +54,24 @@ export function FacultyProgramForm({ mode, initial }: Props) {
     }
     return "generic";
   });
+  const [imageFileId, setImageFileId] = useState(initial?.imageFile?.id ?? "");
+  const [duration, setDuration] = useState(initial?.duration ?? "");
+  const [credentialType, setCredentialType] = useState(
+    initial?.credentialType ?? "",
+  );
+  const [format, setFormat] = useState(initial?.format ?? "");
+  const [practicumHours, setPracticumHours] = useState(
+    initial?.practicumHours != null ? String(initial.practicumHours) : "",
+  );
+  const [admissionRequirements, setAdmissionRequirements] = useState(
+    arrayToLines(initial?.admissionRequirements),
+  );
+  const [clinicalRequirements, setClinicalRequirements] = useState(
+    arrayToLines(initial?.clinicalRequirements),
+  );
+  const [acceptingApplications, setAcceptingApplications] = useState(
+    initial?.acceptingApplications ?? true,
+  );
   const [sortOrder, setSortOrder] = useState(
     initial != null ? String(initial.sortOrder) : "0",
   );
@@ -51,6 +82,33 @@ export function FacultyProgramForm({ mode, initial }: Props) {
   const inputClass =
     "w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base text-slate-900 shadow-sm focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/30";
   const labelClass = "mb-2 block text-sm font-semibold text-slate-800";
+
+  function buildPayload() {
+    const order = Number.parseInt(sortOrder, 10);
+    const bodyPayload = richBodyToPayload(body);
+    const practicum =
+      practicumHours.trim() === ""
+        ? null
+        : Number.parseInt(practicumHours, 10);
+    return {
+      title: title.trim(),
+      slug: slug.trim() || undefined,
+      description: description.trim(),
+      body: bodyPayload,
+      iconKey,
+      imageFileId: imageFileId.trim() || null,
+      duration: duration.trim() || null,
+      credentialType: credentialType.trim() || null,
+      format: format.trim() || null,
+      practicumHours:
+        practicum != null && Number.isFinite(practicum) ? practicum : null,
+      admissionRequirements: linesToArray(admissionRequirements),
+      clinicalRequirements: linesToArray(clinicalRequirements),
+      acceptingApplications,
+      sortOrder: order,
+      isPublished,
+    };
+  }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -68,33 +126,19 @@ export function FacultyProgramForm({ mode, initial }: Props) {
     }
     setBusy(true);
     setError(null);
-    const bodyPayload = richBodyToPayload(body);
     try {
+      const payload = buildPayload();
       if (mode === "create") {
         await apiFetch<FacultyProgramRow>("/faculty-programs", {
           method: "POST",
           token,
-          body: JSON.stringify({
-            title: title.trim(),
-            description: description.trim(),
-            ...(bodyPayload != null ? { body: bodyPayload } : {}),
-            iconKey,
-            sortOrder: order,
-            isPublished,
-          }),
+          body: JSON.stringify(payload),
         });
       } else if (initial) {
         await apiFetch<FacultyProgramRow>(`/faculty-programs/${initial.id}`, {
           method: "PATCH",
           token,
-          body: JSON.stringify({
-            title: title.trim(),
-            description: description.trim(),
-            body: bodyPayload,
-            iconKey,
-            sortOrder: order,
-            isPublished,
-          }),
+          body: JSON.stringify(payload),
         });
       }
       router.push("/dashboard/faculty");
@@ -129,6 +173,19 @@ export function FacultyProgramForm({ mode, initial }: Props) {
         />
       </div>
       <div>
+        <label htmlFor={`${formId}-slug`} className={labelClass}>
+          {t("fieldSlug")}
+        </label>
+        <input
+          id={`${formId}-slug`}
+          value={slug}
+          onChange={(e) => setSlug(e.target.value)}
+          className={inputClass}
+          placeholder={t("slugPlaceholder")}
+        />
+        <p className="mt-2 text-sm text-slate-600">{t("slugHint")}</p>
+      </div>
+      <div>
         <label htmlFor={`${formId}-desc`} className={labelClass}>
           {t("fieldDescription")}
         </label>
@@ -155,6 +212,88 @@ export function FacultyProgramForm({ mode, initial }: Props) {
           value={body}
           onChange={setBody}
           placeholder={t("bodyPlaceholder")}
+        />
+      </div>
+      <ThumbnailPicker
+        value={imageFileId}
+        onChange={setImageFileId}
+        label={t("heroImage")}
+      />
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label htmlFor={`${formId}-duration`} className={labelClass}>
+            {t("duration")}
+          </label>
+          <input
+            id={`${formId}-duration`}
+            value={duration}
+            onChange={(e) => setDuration(e.target.value)}
+            className={inputClass}
+            placeholder={t("durationPlaceholder")}
+          />
+        </div>
+        <div>
+          <label htmlFor={`${formId}-credential`} className={labelClass}>
+            {t("credentialType")}
+          </label>
+          <input
+            id={`${formId}-credential`}
+            value={credentialType}
+            onChange={(e) => setCredentialType(e.target.value)}
+            className={inputClass}
+            placeholder={t("credentialPlaceholder")}
+          />
+        </div>
+        <div>
+          <label htmlFor={`${formId}-format`} className={labelClass}>
+            {t("format")}
+          </label>
+          <input
+            id={`${formId}-format`}
+            value={format}
+            onChange={(e) => setFormat(e.target.value)}
+            className={inputClass}
+            placeholder={t("formatPlaceholder")}
+          />
+        </div>
+        <div>
+          <label htmlFor={`${formId}-practicum`} className={labelClass}>
+            {t("practicumHours")}
+          </label>
+          <input
+            id={`${formId}-practicum`}
+            type="number"
+            min={0}
+            value={practicumHours}
+            onChange={(e) => setPracticumHours(e.target.value)}
+            className={inputClass}
+          />
+        </div>
+      </div>
+      <div>
+        <label htmlFor={`${formId}-admission-req`} className={labelClass}>
+          {t("admissionRequirements")}
+        </label>
+        <textarea
+          id={`${formId}-admission-req`}
+          rows={4}
+          value={admissionRequirements}
+          onChange={(e) => setAdmissionRequirements(e.target.value)}
+          className={inputClass}
+          placeholder={t("requirementsPlaceholder")}
+        />
+      </div>
+      <div>
+        <label htmlFor={`${formId}-clinical-req`} className={labelClass}>
+          {t("clinicalRequirements")}
+        </label>
+        <textarea
+          id={`${formId}-clinical-req`}
+          rows={4}
+          value={clinicalRequirements}
+          onChange={(e) => setClinicalRequirements(e.target.value)}
+          className={inputClass}
+          placeholder={t("requirementsPlaceholder")}
         />
       </div>
       <div>
@@ -196,6 +335,15 @@ export function FacultyProgramForm({ mode, initial }: Props) {
           className="mt-1 h-5 w-5 rounded border-slate-300 text-amber-600 focus:ring-amber-500"
         />
         <span>{t("published")}</span>
+      </label>
+      <label className="flex cursor-pointer items-start gap-3 text-base text-slate-800">
+        <input
+          type="checkbox"
+          checked={acceptingApplications}
+          onChange={(e) => setAcceptingApplications(e.target.checked)}
+          className="mt-1 h-5 w-5 rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+        />
+        <span>{t("acceptingApplications")}</span>
       </label>
       <div className="flex flex-wrap gap-3 pt-2">
         <button

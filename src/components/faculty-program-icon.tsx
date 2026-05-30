@@ -64,6 +64,21 @@ export function FacultyProgramIcon({ iconKey, className = "h-8 w-8" }: Props) {
           <path d="M9 8h6M9 12h6M9 16h4" strokeLinecap="round" />
         </svg>
       );
+    case "clinical_assistant":
+      return (
+        <svg
+          className={`${className} ${gold}`}
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          aria-hidden
+        >
+          <path d="M8 4h8v4H8z" />
+          <path d="M10 8v12M14 8v12" strokeLinecap="round" />
+          <path d="M6 12h12M6 16h12" strokeLinecap="round" />
+        </svg>
+      );
     case "science":
       return (
         <svg

@@ -2,8 +2,10 @@
 
 import { useTranslations } from "next-intl";
 import { useRef } from "react";
-import { FacultyProgramIcon } from "@/components/faculty-program-icon";
+import { FacultyProgramHero } from "@/components/faculty-program-hero";
+import { ProgramMetaBadges } from "@/components/program-meta-badges";
 import { SanitizedHtmlBody } from "@/components/sanitized-html-body";
+import { Link } from "@/i18n/navigation";
 import type { FacultyProgramRow } from "@/lib/types";
 
 type Props = {
@@ -12,6 +14,7 @@ type Props = {
 
 export function FacultyProgramsCarousel({ programs }: Props) {
   const t = useTranslations("HomePage");
+  const tProg = useTranslations("ProgramsPage");
   const scrollerRef = useRef<HTMLDivElement>(null);
 
   function scrollByDir(dir: -1 | 1) {
@@ -62,13 +65,31 @@ export function FacultyProgramsCarousel({ programs }: Props) {
           {programs.map((p) => (
             <article
               key={p.id}
-              className="min-w-[min(100%,280px)] shrink-0 snap-start rounded-2xl border border-zinc-800/90 bg-zinc-900/80 p-6 shadow-lg ring-1 ring-white/5 sm:min-w-[300px]"
+              className="flex min-w-[min(100%,280px)] shrink-0 snap-start flex-col rounded-2xl border border-zinc-800/90 bg-zinc-900/80 p-6 shadow-lg ring-1 ring-white/5 sm:min-w-[300px]"
             >
-              <FacultyProgramIcon iconKey={p.iconKey} />
+              <FacultyProgramHero program={p} className="h-36" />
               <h3 className="mt-5 font-serif text-xl font-semibold leading-snug text-white">
-                {p.title}
+                <Link
+                  href={`/programs/${p.slug}`}
+                  className="hover:text-amber-300"
+                >
+                  {p.title}
+                </Link>
               </h3>
-              <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-zinc-400">
+              <div className="mt-3">
+                <ProgramMetaBadges
+                  program={p}
+                  labels={{
+                    duration: tProg("duration"),
+                    credential: tProg("credential"),
+                    format: tProg("format"),
+                    practicum: tProg("practicum"),
+                    practicumHours: (hours) =>
+                      tProg("practicumHours", { hours }),
+                  }}
+                />
+              </div>
+              <p className="mt-3 flex-1 whitespace-pre-wrap text-sm leading-relaxed text-zinc-400">
                 {p.description}
               </p>
               {p.body?.trim() ? (
@@ -77,6 +98,26 @@ export function FacultyProgramsCarousel({ programs }: Props) {
                   className="mt-4 border-t border-zinc-800/80 pt-4 text-sm leading-relaxed text-zinc-400 [&_a]:text-amber-400 [&_a]:underline [&_h2]:font-serif [&_h2]:text-base [&_h3]:font-serif [&_h3]:text-sm [&_li]:marker:text-zinc-500 [&_p]:mb-2 [&_ul]:my-2"
                 />
               ) : null}
+              <div className="mt-5 flex flex-wrap gap-2">
+                <Link
+                  href={`/programs/${p.slug}`}
+                  className="rounded-lg border border-zinc-600 px-3 py-2 text-sm font-medium text-zinc-200 hover:bg-zinc-800"
+                >
+                  {tProg("learnMore")}
+                </Link>
+                {p.acceptingApplications ? (
+                  <Link
+                    href={`/apply?program=${encodeURIComponent(p.slug)}`}
+                    className="rounded-lg bg-amber-600 px-3 py-2 text-sm font-semibold text-white hover:bg-amber-500"
+                  >
+                    {tProg("applyNow")}
+                  </Link>
+                ) : (
+                  <span className="rounded-lg border border-zinc-700 px-3 py-2 text-sm font-medium text-zinc-500">
+                    {tProg("comingSoon")}
+                  </span>
+                )}
+              </div>
             </article>
           ))}
         </div>
