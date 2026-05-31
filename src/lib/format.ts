@@ -29,12 +29,12 @@ export function newsPublishState(publishedAt: string | null): PublishState {
 }
 
 export function eventFormatClass(
-  format: "ONLINE" | "IN_PERSON" | "HYBRID",
+  format: "ONLINE" | "OFFLINE" | "HYBRID",
 ): string {
   switch (format) {
     case "ONLINE":
       return "bg-sky-100 text-sky-950";
-    case "IN_PERSON":
+    case "OFFLINE":
       return "bg-emerald-100 text-emerald-950";
     case "HYBRID":
       return "bg-violet-100 text-violet-950";

@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo } from "react";
 import { LocaleSwitcher } from "@/components/locale-switcher";
+import { PyramidLogo } from "@/components/pyramid-logo";
 import { useAuth } from "@/contexts/auth-context";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
 
@@ -111,9 +112,12 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         <div className="border-b border-slate-700/80 px-5 py-6">
           <Link
             href="/dashboard"
-            className="block text-xl font-semibold tracking-tight text-white"
+            className="flex items-center gap-3 text-white"
           >
-            {t("brand")}
+            <PyramidLogo className="h-10 w-10 shrink-0" />
+            <span className="text-lg font-semibold leading-tight tracking-tight">
+              {t("brand")}
+            </span>
           </Link>
           <p className="mt-2 text-sm leading-snug text-slate-400">
             {t("adminBadge")}

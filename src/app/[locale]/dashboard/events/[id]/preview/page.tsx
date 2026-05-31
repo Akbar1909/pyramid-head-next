@@ -70,7 +70,7 @@ export default function EventPreviewPage() {
   }
 
   const st = eventPublishState(row.publishedAt);
-  const eventFormat = row.format ?? "IN_PERSON";
+  const eventFormat = row.format ?? "OFFLINE";
   const regCount = row._count?.registrations ?? 0;
   const thumbSrc = row.thumbnail
     ? apiAssetUrl(`/files/uploads/${encodeURIComponent(row.thumbnail.id)}`)

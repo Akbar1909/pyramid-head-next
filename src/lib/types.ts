@@ -31,7 +31,7 @@ export type NewsRow = {
   thumbnail: ThumbnailRef;
 };
 
-export type EventFormat = "ONLINE" | "IN_PERSON" | "HYBRID";
+export type EventFormat = "ONLINE" | "OFFLINE" | "HYBRID";
 
 export type EventRegistrationStatus = "REGISTERED" | "CANCELLED";
 

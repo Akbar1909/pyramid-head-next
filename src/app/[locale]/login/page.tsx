@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { LocaleSwitcher } from "@/components/locale-switcher";
+import { PyramidLogo } from "@/components/pyramid-logo";
 import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "@/i18n/navigation";
 
@@ -46,7 +47,8 @@ export default function LoginPage() {
       </div>
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
-          <h1 className="text-3xl font-semibold tracking-tight text-slate-900">
+          <PyramidLogo className="mx-auto h-20 w-20" />
+          <h1 className="mt-5 text-3xl font-semibold tracking-tight text-slate-900">
             {t("title")}
           </h1>
           <p className="mt-3 text-lg text-slate-600">{t("subtitle")}</p>

@@ -98,7 +98,7 @@ export default function EventsListPage() {
               {(rows ?? []).map((row) => {
                 const st = eventPublishState(row.publishedAt);
                 const regCount = row._count?.registrations ?? 0;
-                const eventFormat = row.format ?? "IN_PERSON";
+                const eventFormat = row.format ?? "OFFLINE";
                 return (
                   <tr
                     key={row.id}

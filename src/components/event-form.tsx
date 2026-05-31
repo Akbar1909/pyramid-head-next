@@ -13,7 +13,7 @@ import { fromDatetimeLocalValue, toDatetimeLocalValue } from "@/lib/format";
 import { isHtmlContentEmpty } from "@/lib/html-content";
 import type { EventFormat, EventRow } from "@/lib/types";
 
-const EVENT_FORMATS: EventFormat[] = ["ONLINE", "IN_PERSON", "HYBRID"];
+const EVENT_FORMATS: EventFormat[] = ["ONLINE", "OFFLINE", "HYBRID"];
 
 type Props = {
   mode: "create" | "edit";
@@ -43,7 +43,7 @@ function eventDefaults(initial?: EventRow | null): EventFormValues {
     startsLocal: toDatetimeLocalValue(initial?.startsAt ?? null),
     endsLocal: toDatetimeLocalValue(initial?.endsAt ?? null),
     location: initial?.location ?? "",
-    format: initial?.format ?? "IN_PERSON",
+    format: initial?.format ?? "OFFLINE",
     registrationEnabled: initial?.registrationEnabled ?? false,
     publishedLocal: toDatetimeLocalValue(initial?.publishedAt ?? null),
     thumbnailId: initial?.thumbnail?.id ?? "",
@@ -86,7 +86,10 @@ export function EventForm({ mode, initial }: Props) {
     if (format === "HYBRID") {
       return t("locationHybrid");
     }
-    return t("locationInPerson");
+    if (format === "OFFLINE") {
+      return t("locationInPerson");
+    }
+    return t("locationOnline");
   }
 
   const uploadImage = useCallback(
