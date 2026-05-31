@@ -28,6 +28,34 @@ export function newsPublishState(publishedAt: string | null): PublishState {
   return "published";
 }
 
+export function eventFormatClass(
+  format: "ONLINE" | "IN_PERSON" | "HYBRID",
+): string {
+  switch (format) {
+    case "ONLINE":
+      return "bg-sky-100 text-sky-950";
+    case "IN_PERSON":
+      return "bg-emerald-100 text-emerald-950";
+    case "HYBRID":
+      return "bg-violet-100 text-violet-950";
+    default:
+      return "bg-slate-200 text-slate-800";
+  }
+}
+
+export function eventRegistrationStatusClass(
+  status: "REGISTERED" | "CANCELLED",
+): string {
+  switch (status) {
+    case "REGISTERED":
+      return "bg-emerald-100 text-emerald-950";
+    case "CANCELLED":
+      return "bg-slate-200 text-slate-800";
+    default:
+      return "bg-slate-200 text-slate-800";
+  }
+}
+
 export function eventPublishState(publishedAt: string | null): PublishState {
   return newsPublishState(publishedAt);
 }

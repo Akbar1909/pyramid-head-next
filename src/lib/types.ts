@@ -31,6 +31,10 @@ export type NewsRow = {
   thumbnail: ThumbnailRef;
 };
 
+export type EventFormat = "ONLINE" | "IN_PERSON" | "HYBRID";
+
+export type EventRegistrationStatus = "REGISTERED" | "CANCELLED";
+
 export type EventRow = {
   id: string;
   title: string;
@@ -39,12 +43,26 @@ export type EventRow = {
   startsAt: string;
   endsAt: string | null;
   location: string | null;
+  format: EventFormat;
+  registrationEnabled: boolean;
   publishedAt: string | null;
   authorId: string;
   createdAt: string;
   updatedAt: string;
   author: AuthorRef;
   thumbnail: ThumbnailRef;
+  _count?: { registrations: number };
+};
+
+export type EventRegistrationRow = {
+  id: string;
+  eventId: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  status: EventRegistrationStatus;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type UploadedFileResponse = {

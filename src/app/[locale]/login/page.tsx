@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { LocaleSwitcher } from "@/components/locale-switcher";
 import { useAuth } from "@/contexts/auth-context";
-import { Link, useRouter } from "@/i18n/navigation";
+import { useRouter } from "@/i18n/navigation";
 
 export default function LoginPage() {
   const t = useTranslations("LoginPage");
@@ -102,14 +102,6 @@ export default function LoginPage() {
             {busy ? t("signingIn") : t("signIn")}
           </button>
         </form>
-        <p className="text-center text-base text-slate-600">
-          <Link
-            href="/"
-            className="font-medium text-amber-800 underline decoration-amber-300 decoration-2 underline-offset-4 hover:text-amber-900"
-          >
-            {t("backToSite")}
-          </Link>
-        </p>
       </div>
     </div>
   );

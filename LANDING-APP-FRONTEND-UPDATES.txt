@@ -1,0 +1,128 @@
+Landing app — frontend updates (copy everything below)
+
+Payment is NOT implemented yet. Skip payment step or show "Coming soon".
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. FACULTY PROGRAMS
+
+GET /faculty-programs/published — list for homepage
+GET /faculty-programs/:slugOrId — detail (use slug in URLs, not id)
+
+New/updated response fields on every program:
+  slug
+  imageFile { id, url, mimeType, filename, originalName } | null
+  duration                  e.g. "18 months"
+  credentialType            e.g. "Diploma"
+  format                    e.g. "Full-time, in-person"
+  practicumHours            number | null
+  admissionRequirements     string[] — render as sanitized HTML
+  clinicalRequirements      string[] — render as sanitized HTML
+  acceptingApplications     boolean (default true)
+
+Program slugs:
+  clinical-assistant
+  cardiac-sonography
+  cardiology-technology
+  medical-office-administration
+  personal-support-worker
+
+New iconKey: clinical_assistant
+
+Frontend rules for acceptingApplications:
+  true  → show "Apply now", link /apply?program={slug}
+  false → show "Coming soon", disable apply button
+
+Hero image: use imageFile.url if set, else fallback to iconKey icon.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+2. ADMISSIONS PAGE (NEW)
+
+GET /admissions — public
+
+Response:
+  introHtml: string | null
+  generalRequirements: string[]
+
+Use for general admissions copy + process steps.
+Per-program requirements: GET /faculty-programs/:slug
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+3. APPLY FORM (BREAKING CHANGES)
+
+POST /program-applications  (multipart)
+
+REQUIRED (new + existing):
+  firstName
+  lastName
+  email
+  phone                         ← NEW required
+  dateOfBirth                   YYYY-MM-DD
+  citizenship                   CA | US | UK | INT
+  preferredStartDate            ← NEW required, YYYY-MM-DD
+
+OPTIONAL:
+  facultyProgramId
+  supplementaryAnswers          JSON string, e.g. '{"whyProgram":"..."}'
+  documentTypes                 JSON array, same order as files
+                                e.g. '["transcript","government_id"]'
+  files                         PDF uploads
+
+documentTypes allowed values:
+  transcript | government_id | credentials | police_check |
+  immunization | cpr_certification | other
+
+If documentTypes omitted → all files = "other"
+If documentTypes sent → length must match files count
+
+Submit response (save trackingToken!):
+  { id, trackingToken, createdAt }
+
+If program not accepting applications:
+  400 — "This program is not accepting applications yet"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+4. TRACK APPLICATION (NEW)
+
+GET /program-applications/track/:token  — public
+
+Use trackingToken from submit response.
+
+Response:
+  id, status, preferredStartDate, interviewScheduledAt,
+  enrolledAt, createdAt, updatedAt,
+  facultyProgram: { id, title, slug }
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+5. APPLICATION STATUSES (UPDATED)
+
+SUBMITTED
+UNDER_REVIEW
+INTERVIEW_SCHEDULED    ← new
+OFFER_SENT             ← new
+ACCEPTED
+ENROLLED               ← new
+DECLINED
+WITHDRAWN
+
+Update status labels on applicant track page.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+FRONTEND CHECKLIST
+
+[ ] Program URLs use slug
+[ ] Show imageFile, duration, credentialType, requirements on cards/detail
+[ ] Requirements rendered as sanitized HTML
+[ ] Check acceptingApplications → Apply vs Coming soon
+[ ] Admissions page → GET /admissions + program detail API
+[ ] Apply form → add phone + preferredStartDate
+[ ] Apply form → supplementaryAnswers + documentTypes (optional)
+[ ] After submit → save/show trackingToken
+[ ] Track page → GET /program-applications/track/:token
+[ ] New status labels on track page
+[ ] No payment integration yet

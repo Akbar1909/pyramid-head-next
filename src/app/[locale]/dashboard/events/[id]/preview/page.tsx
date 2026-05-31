@@ -9,14 +9,16 @@ import { Link } from "@/i18n/navigation";
 import { apiFetch } from "@/lib/api/client";
 import { apiAssetUrl } from "@/lib/env";
 import {
+  eventFormatClass,
   eventPublishState,
   formatDateTime,
   publishBadgeClass,
 } from "@/lib/format";
-import type { EventRow } from "@/lib/types";
+import type { EventFormat, EventRow } from "@/lib/types";
 
 export default function EventPreviewPage() {
   const t = useTranslations("ContentPreview");
+  const tEvents = useTranslations("DashboardEvents");
   const tStatus = useTranslations("Common.status");
   const tCommon = useTranslations("Common");
   const params = useParams();
@@ -68,6 +70,8 @@ export default function EventPreviewPage() {
   }
 
   const st = eventPublishState(row.publishedAt);
+  const eventFormat = row.format ?? "IN_PERSON";
+  const regCount = row._count?.registrations ?? 0;
   const thumbSrc = row.thumbnail
     ? apiAssetUrl(`/files/uploads/${encodeURIComponent(row.thumbnail.id)}`)
     : null;
@@ -89,12 +93,30 @@ export default function EventPreviewPage() {
           >
             {tCommon("edit")}
           </Link>
+          {row.registrationEnabled ? (
+            <>
+              <span className="text-slate-300">·</span>
+              <Link
+                href={`/dashboard/events/${id}/registrations`}
+                className="font-medium text-sky-700 hover:text-sky-900"
+              >
+                {tEvents("registrations")} ({regCount})
+              </Link>
+            </>
+          ) : null}
         </div>
-        <span
-          className={`inline-block rounded-md px-3 py-1 text-sm font-semibold ${publishBadgeClass(st)}`}
-        >
-          {tStatus(st)}
-        </span>
+        <div className="flex flex-wrap items-center gap-2">
+          <span
+            className={`inline-block rounded-md px-3 py-1 text-sm font-semibold ${eventFormatClass(eventFormat)}`}
+          >
+            {tEvents(`format_${eventFormat}`)}
+          </span>
+          <span
+            className={`inline-block rounded-md px-3 py-1 text-sm font-semibold ${publishBadgeClass(st)}`}
+          >
+            {tStatus(st)}
+          </span>
+        </div>
       </div>
 
       <article className="rounded-2xl border border-slate-200/90 bg-white p-8 shadow-sm ring-1 ring-slate-900/5 sm:p-10">
@@ -124,9 +146,21 @@ export default function EventPreviewPage() {
           {row.location ? (
             <div>
               <dt className="inline font-medium text-slate-500">
-                {t("location")}
+                {eventFormat === "ONLINE"
+                  ? tEvents("locationOnline")
+                  : eventFormat === "HYBRID"
+                    ? tEvents("locationHybrid")
+                    : tEvents("locationInPerson")}
               </dt>{" "}
               <dd className="inline text-slate-900">{row.location}</dd>
+            </div>
+          ) : null}
+          {row.registrationEnabled ? (
+            <div>
+              <dt className="inline font-medium text-slate-500">
+                {tEvents("colRegistrations")}
+              </dt>{" "}
+              <dd className="inline text-slate-900">{regCount}</dd>
             </div>
           ) : null}
           <div>

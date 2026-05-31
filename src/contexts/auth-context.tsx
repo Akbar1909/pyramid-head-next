@@ -1,17 +1,19 @@
 "use client";
 
 import {
+  SessionProvider,
+  signIn,
+  signOut,
+  useSession,
+} from "next-auth/react";
+import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
-  useState,
+  type ReactNode,
 } from "react";
-import { apiFetch } from "@/lib/api/client";
 import type { AuthUser } from "@/lib/types";
-
-const STORAGE_KEY = "pyramid_admin_token";
 
 type AuthContextValue = {
   token: string | null;
@@ -25,75 +27,67 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [token, setToken] = useState<string | null>(null);
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [isHydrated, setIsHydrated] = useState(false);
-  const [isLoadingUser, setIsLoadingUser] = useState(false);
-
-  useEffect(() => {
-    setToken(localStorage.getItem(STORAGE_KEY));
-    setIsHydrated(true);
-  }, []);
-
-  const refreshUser = useCallback(async () => {
-    if (!token) {
-      setUser(null);
-      return;
-    }
-    setIsLoadingUser(true);
-    try {
-      const u = await apiFetch<AuthUser>("/auth/me", { token });
-      setUser(u);
-    } catch {
-      setUser(null);
-      localStorage.removeItem(STORAGE_KEY);
-      setToken(null);
-    } finally {
-      setIsLoadingUser(false);
-    }
-  }, [token]);
-
-  useEffect(() => {
-    void refreshUser();
-  }, [refreshUser]);
+function AuthContextProvider({ children }: { children: ReactNode }) {
+  const { data: session, status, update } = useSession();
 
   const login = useCallback(async (email: string, password: string) => {
-    const res = await apiFetch<{ accessToken: string; user: AuthUser }>(
-      "/auth/login",
-      {
-        method: "POST",
-        body: JSON.stringify({ email, password }),
-      },
-    );
-    if (res.user.role !== "ADMIN") {
+    const result = await signIn("credentials", {
+      email,
+      password,
+      redirect: false,
+    });
+    if (result?.ok) {
+      return;
+    }
+    if (result?.code === "admin_only") {
       throw new Error("ADMIN_ONLY");
     }
-    localStorage.setItem(STORAGE_KEY, res.accessToken);
-    setToken(res.accessToken);
-    setUser(res.user);
+    throw new Error(result?.error ?? "Sign-in failed");
   }, []);
 
   const logout = useCallback(() => {
-    localStorage.removeItem(STORAGE_KEY);
-    setToken(null);
-    setUser(null);
+    void signOut({ redirect: false });
   }, []);
 
+  const refreshUser = useCallback(async () => {
+    await update();
+  }, [update]);
+
+  const user = useMemo((): AuthUser | null => {
+    if (!session?.user?.email || !session.user.id) {
+      return null;
+    }
+    return {
+      id: session.user.id,
+      email: session.user.email,
+      role: session.user.role,
+    };
+  }, [session]);
+
   const value = useMemo(
-    () => ({
-      token,
+    (): AuthContextValue => ({
+      token: session?.accessToken ?? null,
       user,
-      isHydrated,
-      isLoadingUser,
+      isHydrated: status !== "loading",
+      isLoadingUser: status === "loading",
       login,
       logout,
       refreshUser,
     }),
-    [token, user, isHydrated, isLoadingUser, login, logout, refreshUser],
+    [session, user, status, login, logout, refreshUser],
   );
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+  );
+}
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  return (
+    <SessionProvider>
+      <AuthContextProvider>{children}</AuthContextProvider>
+    </SessionProvider>
+  );
 }
 
 export function useAuth() {

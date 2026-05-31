@@ -6,11 +6,19 @@ import { useAuth } from "@/contexts/auth-context";
 import { Link } from "@/i18n/navigation";
 import { apiFetch } from "@/lib/api/client";
 import {
+  eventFormatClass,
   eventPublishState,
   formatDateTime,
   publishBadgeClass,
 } from "@/lib/format";
-import type { EventRow } from "@/lib/types";
+import type { EventFormat, EventRow } from "@/lib/types";
+
+function formatLabel(
+  format: EventFormat,
+  t: ReturnType<typeof useTranslations<"DashboardEvents">>,
+): string {
+  return t(`format_${format}`);
+}
 
 export default function EventsListPage() {
   const t = useTranslations("DashboardEvents");
@@ -74,11 +82,13 @@ export default function EventsListPage() {
       ) : null}
       <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-900/5">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[720px] text-left text-[0.9375rem]">
+          <table className="w-full min-w-[900px] text-left text-[0.9375rem]">
             <thead className="border-b border-slate-200 bg-slate-50/90 text-xs font-semibold uppercase tracking-wide text-slate-500">
               <tr>
                 <th className="px-5 py-4">{t("colTitle")}</th>
                 <th className="px-5 py-4">{t("colStarts")}</th>
+                <th className="px-5 py-4">{t("colFormat")}</th>
+                <th className="px-5 py-4">{t("colRegistrations")}</th>
                 <th className="px-5 py-4">{t("colStatus")}</th>
                 <th className="px-5 py-4">{t("colAuthor")}</th>
                 <th className="px-5 py-4 text-right">{t("colActions")}</th>
@@ -87,6 +97,8 @@ export default function EventsListPage() {
             <tbody className="divide-y divide-slate-200">
               {(rows ?? []).map((row) => {
                 const st = eventPublishState(row.publishedAt);
+                const regCount = row._count?.registrations ?? 0;
+                const eventFormat = row.format ?? "IN_PERSON";
                 return (
                   <tr
                     key={row.id}
@@ -100,6 +112,16 @@ export default function EventsListPage() {
                     </td>
                     <td className="px-5 py-4">
                       <span
+                        className={`inline-flex rounded-md px-2.5 py-1 text-xs font-semibold ${eventFormatClass(eventFormat)}`}
+                      >
+                        {formatLabel(eventFormat, t)}
+                      </span>
+                    </td>
+                    <td className="px-5 py-4 text-slate-700">
+                      {row.registrationEnabled ? regCount : "—"}
+                    </td>
+                    <td className="px-5 py-4">
+                      <span
                         className={`inline-block rounded-md px-2.5 py-1 text-xs font-semibold ${publishBadgeClass(st)}`}
                       >
                         {tStatus(st)}
@@ -109,6 +131,17 @@ export default function EventsListPage() {
                       {row.author.email}
                     </td>
                     <td className="whitespace-nowrap px-5 py-4 text-right">
+                      {row.registrationEnabled ? (
+                        <>
+                          <Link
+                            href={`/dashboard/events/${row.id}/registrations`}
+                            className="font-medium text-sky-700 hover:text-sky-900"
+                          >
+                            {t("registrations")}
+                          </Link>
+                          <span className="mx-2 text-slate-300">|</span>
+                        </>
+                      ) : null}
                       <Link
                         href={`/dashboard/events/${row.id}/preview`}
                         className="font-medium text-slate-600 hover:text-amber-800"

@@ -2,8 +2,15 @@ const path = require("node:path");
 const dotenv = require("dotenv");
 
 const envPath = path.join(__dirname, ".env");
-const { parsed } = dotenv.config({ path: envPath });
-const fromFile = parsed && typeof parsed === "object" ? { ...parsed } : {};
+const prodEnvPath = path.join(__dirname, ".env.prod");
+const fromProd = dotenv.config({ path: prodEnvPath }).parsed;
+const fromDefault = dotenv.config({ path: envPath }).parsed;
+const fromFile =
+  fromDefault && typeof fromDefault === "object"
+    ? { ...fromDefault }
+    : fromProd && typeof fromProd === "object"
+      ? { ...fromProd }
+      : {};
 
 module.exports = {
   apps: [

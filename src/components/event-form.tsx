@@ -11,7 +11,9 @@ import { apiFetch, apiUploadFile } from "@/lib/api/client";
 import { getApiBaseUrl } from "@/lib/env";
 import { fromDatetimeLocalValue, toDatetimeLocalValue } from "@/lib/format";
 import { isHtmlContentEmpty } from "@/lib/html-content";
-import type { EventRow } from "@/lib/types";
+import type { EventFormat, EventRow } from "@/lib/types";
+
+const EVENT_FORMATS: EventFormat[] = ["ONLINE", "IN_PERSON", "HYBRID"];
 
 type Props = {
   mode: "create" | "edit";
@@ -25,6 +27,8 @@ type EventFormValues = {
   startsLocal: string;
   endsLocal: string;
   location: string;
+  format: EventFormat;
+  registrationEnabled: boolean;
   publishedLocal: string;
   thumbnailId: string;
   clearThumbnail: boolean;
@@ -39,6 +43,8 @@ function eventDefaults(initial?: EventRow | null): EventFormValues {
     startsLocal: toDatetimeLocalValue(initial?.startsAt ?? null),
     endsLocal: toDatetimeLocalValue(initial?.endsAt ?? null),
     location: initial?.location ?? "",
+    format: initial?.format ?? "IN_PERSON",
+    registrationEnabled: initial?.registrationEnabled ?? false,
     publishedLocal: toDatetimeLocalValue(initial?.publishedAt ?? null),
     thumbnailId: initial?.thumbnail?.id ?? "",
     clearThumbnail: false,
@@ -60,6 +66,7 @@ export function EventForm({ mode, initial }: Props) {
     reset,
     setError,
     setValue,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<EventFormValues>({
     defaultValues: eventDefaults(initial),
@@ -69,6 +76,18 @@ export function EventForm({ mode, initial }: Props) {
   useEffect(() => {
     reset(eventDefaults(initial));
   }, [initial?.id, reset]);
+
+  const format = watch("format");
+
+  function locationLabel(): string {
+    if (format === "ONLINE") {
+      return t("locationOnline");
+    }
+    if (format === "HYBRID") {
+      return t("locationHybrid");
+    }
+    return t("locationInPerson");
+  }
 
   const uploadImage = useCallback(
     async (file: File) => {
@@ -112,6 +131,8 @@ export function EventForm({ mode, initial }: Props) {
             startsAt,
             ...(endsAt !== undefined ? { endsAt } : {}),
             ...(data.location.trim() ? { location: data.location.trim() } : {}),
+            format: data.format,
+            registrationEnabled: data.registrationEnabled,
             ...(publishedAt !== undefined ? { publishedAt } : {}),
             ...(data.thumbnailId.trim()
               ? { thumbnailId: data.thumbnailId.trim() }
@@ -126,6 +147,8 @@ export function EventForm({ mode, initial }: Props) {
           startsAt,
           endsAt: endsAt ?? null,
           location: data.location.trim(),
+          format: data.format,
+          registrationEnabled: data.registrationEnabled,
         };
         if (data.unpublish) {
           payload.unpublish = true;
@@ -276,10 +299,29 @@ export function EventForm({ mode, initial }: Props) {
       </div>
       <div>
         <label
+          htmlFor={`${formId}-format`}
+          className="mb-2 block text-sm font-semibold text-slate-800"
+        >
+          {t("format")}
+        </label>
+        <select
+          id={`${formId}-format`}
+          className={inputClass}
+          {...register("format")}
+        >
+          {EVENT_FORMATS.map((f) => (
+            <option key={f} value={f}>
+              {t(`format_${f}`)}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label
           htmlFor={`${formId}-location`}
           className="mb-2 block text-sm font-semibold text-slate-800"
         >
-          {t("location")}
+          {locationLabel()}
         </label>
         <input
           id={`${formId}-location`}
@@ -287,6 +329,21 @@ export function EventForm({ mode, initial }: Props) {
           {...register("location")}
         />
       </div>
+      <Controller
+        name="registrationEnabled"
+        control={control}
+        render={({ field }) => (
+          <label className="flex min-h-11 cursor-pointer items-center gap-3 text-base text-slate-800">
+            <input
+              type="checkbox"
+              checked={field.value}
+              onChange={(e) => field.onChange(e.target.checked)}
+              className="h-5 w-5 rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+            />
+            <span>{t("registrationEnabled")}</span>
+          </label>
+        )}
+      />
       <div>
         <label
           htmlFor={`${formId}-published`}
